@@ -1488,15 +1488,6 @@
     const name = (e.state && e.state.page) || pathToName || 'home';
     showPage(name);
   });
-
-  // Initial route on load (best-effort; deep-linking requires real server
-  // routing once this is deployed, e.g. on Shopify)
-  try {
-    const pathToName = Object.keys(ROUTES).find(k => ROUTES[k] === location.pathname);
-    showPage(pathToName || 'home');
-  } catch (err) {
-    showPage('home');
-  }
 </script>
 <script>
 
@@ -1852,6 +1843,18 @@
   loadCart();
   renderCart();
 
+  // Initial route on load — moved here (end of the second script block)
+  // so that every function it might call (renderCheckoutSummary,
+  // loadRealOrderConfirmation, etc.) is guaranteed to already exist.
+  // Running this from the first script block was the bug: it could call
+  // functions defined later, which don't exist yet at that point.
+  try {
+    const pathToName = Object.keys(ROUTES).find(k => ROUTES[k] === location.pathname);
+    showPage(pathToName || 'home');
+  } catch (err) {
+    console.error('Initial route failed:', err.message);
+    showPage('home');
+  }
 </script>
 </body>
 </html>
